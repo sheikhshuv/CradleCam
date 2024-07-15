@@ -33,13 +33,24 @@ def is_negative_emotion(emotion):
 
 @app.route('/detect-emotion', methods=['POST'])
 def detect_emotion():
-    print(request.files)
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image provided'}), 400
+    data = request.get_json()
 
-    image_file = request.files['image']
-    logging.info(f"Received file: {image_file.filename}")
-    np_img = np.frombuffer(image_file.read(), np.uint8)
+    if 'image' not in data:
+        return jsonify({"error": "Image not provided"}), 400
+
+    base64_image = data['image']
+    time = data['time']
+    
+    # Remove the data URL prefix
+    if base64_image.startswith('data:image'):
+        base64_image = base64_image.split(',')[1]
+    
+    # Decode the base64 string
+    image_data = base64.b64decode(base64_image)
+    
+
+    logging.info(f"Received file timestamp: {time}")
+    np_img = np.frombuffer(image_data, np.uint8)
     img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
     try:
@@ -94,6 +105,8 @@ def detect_emotion():
 def upload_image():
     data = request.get_json()
     base64_image = data['image']
+    time = data['time']
+    print(time)
     
     # Remove the data URL prefix
     if base64_image.startswith('data:image'):
