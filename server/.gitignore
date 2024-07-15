@@ -153,3 +153,5 @@ __pypackages__/
 
 # Cython debug symbols
 cython_debug/
+
+received_image.jpg
