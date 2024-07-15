@@ -4,6 +4,10 @@ import cv2
 import numpy as np
 from deepface import DeepFace
 import logging
+import base64
+from io import BytesIO
+from PIL import Image
+
 
 app = Flask(__name__)
 CORS(app)
@@ -29,6 +33,7 @@ def is_negative_emotion(emotion):
 
 @app.route('/detect-emotion', methods=['POST'])
 def detect_emotion():
+    print(request.files)
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
 
@@ -84,6 +89,27 @@ def detect_emotion():
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/upload-image', methods=['POST'])
+def upload_image():
+    data = request.get_json()
+    base64_image = data['image']
+    
+    # Remove the data URL prefix
+    if base64_image.startswith('data:image'):
+        base64_image = base64_image.split(',')[1]
+    
+    # Decode the base64 string
+    image_data = base64.b64decode(base64_image)
+    
+    # Convert to an image
+    image = Image.open(BytesIO(image_data))
+    
+    # Save the image (optional)
+    image.save('received_image.jpg')
+
+    return jsonify({"message": "Image received and processed successfully."})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
